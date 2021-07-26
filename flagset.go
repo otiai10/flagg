@@ -1,8 +1,8 @@
 package largo
 
 import (
-	"flag"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/otiai10/largo/values"
@@ -11,21 +11,29 @@ import (
 type (
 	FlagSet struct {
 		Name      string
-		errhandle flag.ErrorHandling
+		errhandle ErrorHandling
 		args      []string
 		rest      []string
 		dict      map[string]*Flag
-		strict    bool // Error on Unkonw flag
-		// *flag.FlagSet
+		// strict    bool // Error on Unkonw flag
 	}
 	Flag struct {
-		Name  string
-		Value Value
-		Usage string
+		Name    string
+		Value   Value
+		Usage   string
+		Aliases []string
 	}
+	ErrorHandling int
 )
 
-func NewFlagSet(name string, errorHandling flag.ErrorHandling) *FlagSet {
+// https://cs.opensource.google/go/go/+/refs/tags/go1.16.6:src/flag/flag.go;l=314-318;drc=refs%2Ftags%2Fgo1.16.6
+const (
+	ContinueOnError ErrorHandling = iota // Return a descriptive error.
+	ExitOnError                          // Call os.Exit(2) or for -h/-help Exit(0).
+	PanicOnError                         // Call panic with a descriptive error.
+)
+
+func NewFlagSet(name string, errorHandling ErrorHandling) *FlagSet {
 	return &FlagSet{
 		Name:      name,
 		errhandle: errorHandling,
@@ -37,7 +45,7 @@ func (fset *FlagSet) Parse(arguments []string) error {
 	for i := 0; i < len(arguments); {
 		next, err := fset.parseSingle(i)
 		if err != nil {
-			return err
+			return fset.onError(err)
 		}
 		i = next
 	}
@@ -62,6 +70,10 @@ func (fset *FlagSet) parseSingle(i int) (next int, err error) {
 	}
 
 	name := s[numMinuses:]
+	if name[0] == '-' {
+		return i + 1, fmt.Errorf("invalid arg name: %s", name)
+	}
+
 	givenByEqual := false
 	rawval := ""
 
@@ -71,13 +83,13 @@ func (fset *FlagSet) parseSingle(i int) (next int, err error) {
 		rawval = kvpair[1]
 	}
 
-	f, found := fset.dict[name]
-	if !found {
-		if fset.strict {
-			return i + 1, fmt.Errorf("unkonwn flag: %v", name)
-		} else {
-			return i + 1, nil
-		}
+	f := fset.Lookup(name)
+	if f == nil {
+		// if fset.strict {
+		// 	return i + 1, fmt.Errorf("unkonwn flag: %v", name)
+		// } else {
+		return i + 1, nil
+		// }
 	}
 
 	if bv, ok := f.Value.(*values.BoolValue); ok {
@@ -101,36 +113,65 @@ func (fset *FlagSet) Rest() []string {
 	return fset.rest
 }
 
-func (fset *FlagSet) StringVar(dest *string, name string, defaultval string, usage string) {
+func (fset *FlagSet) StringVar(dest *string, name string, defaultval string, usage string) *Flag {
 	*dest = defaultval
 	sv := (*values.StringValue)(dest)
-	flag := &Flag{Name: name, Value: sv, Usage: usage}
-	if fset.dict == nil {
-		fset.dict = make(map[string]*Flag)
-	}
-	fset.dict[name] = flag
+	return fset.Var(sv, name, usage)
 }
 
-func (fset *FlagSet) BoolVar(dest *bool, name string, defaultval bool, usage string) {
+func (fset *FlagSet) BoolVar(dest *bool, name string, defaultval bool, usage string) *Flag {
 	*dest = defaultval
 	bv := (*values.BoolValue)(dest)
-	flag := &Flag{Name: name, Value: bv, Usage: usage}
-	if fset.dict == nil {
-		fset.dict = make(map[string]*Flag)
-	}
-	fset.dict[name] = flag
+	return fset.Var(bv, name, usage)
 }
 
-func (fset *FlagSet) IntVar(dest *int, name string, defaultval int, usage string) {
+func (fset *FlagSet) IntVar(dest *int, name string, defaultval int, usage string) *Flag {
 	*dest = defaultval
 	iv := (*values.IntValue)(dest)
-	flag := &Flag{Name: name, Value: iv, Usage: usage}
+	return fset.Var(iv, name, usage)
+}
+
+func (fset *FlagSet) Var(value Value, name string, usage string) *Flag {
+	flag := &Flag{Name: name, Value: value, Usage: usage}
 	if fset.dict == nil {
 		fset.dict = make(map[string]*Flag)
 	}
 	fset.dict[name] = flag
+	return flag
+}
+
+func (f *Flag) Alias(aliases ...string) *Flag {
+	f.Aliases = aliases
+	return f
 }
 
 func (fset *FlagSet) Lookup(name string) *Flag {
-	return fset.dict[name]
+	found, ok := fset.dict[name]
+	if ok {
+		return found
+	}
+	for _, f := range fset.dict {
+		for _, a := range f.Aliases {
+			if a == name {
+				return f
+			}
+		}
+	}
+	return nil
+}
+
+func (fset *FlagSet) onError(err error) error {
+	if err == nil {
+		return nil
+	}
+	switch fset.errhandle {
+	case ContinueOnError:
+		return err
+	case ExitOnError:
+		fmt.Println(err.Error())
+		os.Exit(1)
+	case PanicOnError:
+		panic(err)
+	}
+	return err
 }
