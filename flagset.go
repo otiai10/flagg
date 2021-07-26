@@ -65,8 +65,12 @@ func (fset *FlagSet) parseSingle(i int) (next int, err error) {
 	}
 
 	f, found := fset.dict[name]
-	if !found && fset.strict {
-		return i + 1, fmt.Errorf("unkonwn flag: %v", name)
+	if !found {
+		if fset.strict {
+			return i + 1, fmt.Errorf("unkonwn flag: %v", name)
+		} else {
+			return i + 1, nil
+		}
 	}
 
 	if bv, ok := f.Value.(*values.BoolValue); ok {
@@ -94,6 +98,16 @@ func (fset *FlagSet) StringVar(dest *string, name string, defaultval string, usa
 	*dest = defaultval
 	sv := (*values.StringValue)(dest)
 	flag := &Flag{Name: name, Value: sv, Usage: usage}
+	if fset.dict == nil {
+		fset.dict = make(map[string]*Flag)
+	}
+	fset.dict[name] = flag
+}
+
+func (fset *FlagSet) BoolVar(dest *bool, name string, defaultval bool, usage string) {
+	*dest = defaultval
+	bv := (*values.BoolValue)(dest)
+	flag := &Flag{Name: name, Value: bv, Usage: usage}
 	if fset.dict == nil {
 		fset.dict = make(map[string]*Flag)
 	}

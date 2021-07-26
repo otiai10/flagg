@@ -30,14 +30,17 @@ func TestTokenize(t *testing.T) {
 }
 
 func TestFlagSet_Parse(t *testing.T) {
-	fset := NewFlagSet("foo", flag.ExitOnError)
-	Expect(t, fset).TypeOf("*largo.FlagSet")
-
 	var name string
+	var upper bool
+	fset := NewFlagSet("foo", flag.ExitOnError)
+
 	fset.StringVar(&name, "name", "otiai10", "Name of the user")
-	err := fset.Parse([]string{"hoge", "-name", "ochiai", "baz"})
+	fset.BoolVar(&upper, "upper", false, "To upper case of the given name")
+
+	err := fset.Parse([]string{"hoge", "-name", "ochiai", "baz", "-upper"})
 	Expect(t, err).ToBe(nil)
 	Expect(t, fset.Lookup("name").Value.Get()).ToBe("ochiai")
 	Expect(t, name).ToBe("ochiai")
+	Expect(t, upper).ToBe(true)
 	Expect(t, fset.Rest()).ToBe([]string{"hoge", "baz"})
 }
