@@ -8,15 +8,22 @@ import (
 	"github.com/otiai10/largo/values"
 )
 
-type FlagSet struct {
-	Name      string
-	errhandle flag.ErrorHandling
-	args      []string
-	rest      []string
-	dict      map[string]*Flag
-	strict    bool // Error on Unkonw flag
-	// *flag.FlagSet
-}
+type (
+	FlagSet struct {
+		Name      string
+		errhandle flag.ErrorHandling
+		args      []string
+		rest      []string
+		dict      map[string]*Flag
+		strict    bool // Error on Unkonw flag
+		// *flag.FlagSet
+	}
+	Flag struct {
+		Name  string
+		Value Value
+		Usage string
+	}
+)
 
 func NewFlagSet(name string, errorHandling flag.ErrorHandling) *FlagSet {
 	return &FlagSet{
@@ -108,6 +115,16 @@ func (fset *FlagSet) BoolVar(dest *bool, name string, defaultval bool, usage str
 	*dest = defaultval
 	bv := (*values.BoolValue)(dest)
 	flag := &Flag{Name: name, Value: bv, Usage: usage}
+	if fset.dict == nil {
+		fset.dict = make(map[string]*Flag)
+	}
+	fset.dict[name] = flag
+}
+
+func (fset *FlagSet) IntVar(dest *int, name string, defaultval int, usage string) {
+	*dest = defaultval
+	iv := (*values.IntValue)(dest)
+	flag := &Flag{Name: name, Value: iv, Usage: usage}
 	if fset.dict == nil {
 		fset.dict = make(map[string]*Flag)
 	}
