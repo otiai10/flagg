@@ -1,4 +1,4 @@
-# flagg
+# largo
 
 Yet another command line flag parser, for unordered options.
 
@@ -30,7 +30,7 @@ HELLO HELLO HELLO
 
 ```go
 import (
-  "github.com/otiai10/flagg"
+  "github.com/otiai10/largo"
 )
 
 var (
@@ -39,7 +39,7 @@ var (
 )
 
 func main() {
-  f := flagg.NewFlaggSet("say")
+  f := largo.NewFlaggSet("say")
   f.IntVar(&count, "n", 1, "Number of count to say it")
   f.BoolVar(&upper, "upper", false, "Say it in upper cases")
 
