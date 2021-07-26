@@ -58,7 +58,7 @@ func main() {
   f.IntVar(&count, "count", 1, "Number of count to say it").Alias("c")
   f.BoolVar(&upper, "upper", false, "Say it in upper cases").Alias("u")
 
-  f.Parse([]string{"say", "-n", "3", "hello", "-upper"})
+  f.Parse([]string{"say", "-c", "3", "hello", "-upper"})
 
   fmt.Println("count:", count) // count: 3
   fmt.Println("upper:", upper) // upper: true
