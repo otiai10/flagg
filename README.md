@@ -1,5 +1,8 @@
 # WIP: largo
 
+[![Go](https://github.com/otiai10/largo/actions/workflows/go.yaml/badge.svg)](https://github.com/otiai10/largo/actions/workflows/go.yaml)
+[![codecov](https://codecov.io/gh/otiai10/largo/branch/main/graph/badge.svg?token=OrcqSORFpr)](https://codecov.io/gh/otiai10/largo)
+
 Yet another command line flag parser, for unordered options.
 
 # Motivation
