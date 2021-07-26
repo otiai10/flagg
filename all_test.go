@@ -8,19 +8,25 @@ import (
 )
 
 func TestTokenize(t *testing.T) {
-
-	Expect(t, Tokenize(`foo bar baz "hoge fuga" piyo`)).
-		ToBe([]string{"foo", "bar", "baz", "hoge fuga", "piyo"})
-
-	Expect(t, Tokenize(`foo 'bar baz' hoge`)).
-		ToBe([]string{"foo", "bar baz", "hoge"})
-
-	Expect(t, Tokenize(`foo "bar 'baz hoge' fuga" piyo`)).
-		ToBe([]string{"foo", "bar 'baz hoge' fuga", "piyo"})
-
-	Expect(t, Tokenize(`foo 'bar "baz hoge" fuga' piyo`)).
-		ToBe([]string{"foo", "bar \"baz hoge\" fuga", "piyo"})
-
+	for _, c := range []struct {
+		Input    string
+		Epxected []string
+	}{
+		{
+			`foo bar baz "hoge fuga" piyo`,
+			[]string{"foo", "bar", "baz", "hoge fuga", "piyo"},
+		},
+		{
+			`foo bar 'baz hoge' fuga piyo`,
+			[]string{"foo", "bar", "baz hoge", "fuga", "piyo"},
+		},
+		{
+			`foo 'bar "baz hoge" fuga' piyo`,
+			[]string{"foo", "bar \"baz hoge\" fuga", "piyo"},
+		},
+	} {
+		Expect(t, Tokenize(c.Input)).ToBe(c.Epxected)
+	}
 }
 
 func TestFlagSet_Parse(t *testing.T) {
