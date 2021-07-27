@@ -28,6 +28,23 @@ func TestTokenize(t *testing.T) {
 	}
 }
 
+func TestFlagSet_ParseLine(t *testing.T) {
+	verbose := false
+	fset := NewFlagSet("dosomething", PanicOnError)
+	fset.BoolVar(&verbose, "verbose", false, "Show verbose log").Alias("v")
+	fset.ParseLine("dosomething create aws -v ec2-instance")
+	Expect(t, verbose).ToBe(true)
+	Expect(t, fset.Rest()).ToBe([]string{"create", "aws", "ec2-instance"})
+
+	When(t, "invalid input with PanicOnError", func(t *testing.T) {
+		defer func() {
+			re := recover()
+			Expect(t, re).Not().ToBe(nil)
+		}()
+		fset.ParseLine("dosomething three minuses --- is invalid")
+	})
+}
+
 func TestFlagSet_Parse(t *testing.T) {
 	var name string
 	var upper bool
@@ -38,7 +55,7 @@ func TestFlagSet_Parse(t *testing.T) {
 	fset.BoolVar(&upper, "upper", false, "To upper case of the given name")
 	fset.IntVar(&count, "c", 7, "Count to say names")
 
-	err := fset.Parse([]string{"hoge", "-name", "ochiai", "baz", "-upper", "-undefined", "-c", "2", "-foo=baa", "--"})
+	err := fset.Parse([]string{"hoge", "-name=ochiai", "baz", "-upper", "-undefined", "-c", "2", "-foo=baa", "--"})
 	Expect(t, err).ToBe(nil)
 	Expect(t, fset.Lookup("name").Value.Get()).ToBe("ochiai")
 	Expect(t, fset.Lookup("n").Value.Get()).ToBe("ochiai")
@@ -49,4 +66,16 @@ func TestFlagSet_Parse(t *testing.T) {
 
 	err = fset.Parse([]string{"foo", "---unko"})
 	Expect(t, err).Not().ToBe(nil)
+
+	When(t, "given empty arguments, it does nothing", func(t *testing.T) {
+		err := fset.Parse([]string{})
+		Expect(t, err).ToBe(nil)
+	})
+
+	When(t, "include single minus char, stop parsing following args", func(t *testing.T) {
+		err := fset.Parse([]string{"hoge", "-upper=false", "-", "-name", "Hiromu"})
+		Expect(t, err).ToBe(nil)
+		Expect(t, upper).ToBe(false)
+		Expect(t, name).Not().ToBe("Hiromu")
+	})
 }

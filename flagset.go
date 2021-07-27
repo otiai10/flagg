@@ -20,8 +20,8 @@ type (
 	Flag struct {
 		Name    string
 		Value   Value
-		Usage   string
-		Aliases []string
+		usage   string
+		aliases []string
 	}
 	ErrorHandling int
 )
@@ -40,7 +40,17 @@ func NewFlagSet(name string, errorHandling ErrorHandling) *FlagSet {
 	}
 }
 
+func (fset *FlagSet) ParseLine(line string) error {
+	return fset.Parse(Tokenize(line))
+}
+
 func (fset *FlagSet) Parse(arguments []string) error {
+	if len(arguments) == 0 {
+		return nil
+	}
+	if arguments[0] == fset.Name {
+		arguments = arguments[1:]
+	}
 	fset.args = arguments
 	for i := 0; i < len(arguments); {
 		next, err := fset.parseSingle(i)
@@ -132,17 +142,12 @@ func (fset *FlagSet) IntVar(dest *int, name string, defaultval int, usage string
 }
 
 func (fset *FlagSet) Var(value Value, name string, usage string) *Flag {
-	flag := &Flag{Name: name, Value: value, Usage: usage}
+	flag := &Flag{Name: name, Value: value, usage: usage}
 	if fset.dict == nil {
 		fset.dict = make(map[string]*Flag)
 	}
 	fset.dict[name] = flag
 	return flag
-}
-
-func (f *Flag) Alias(aliases ...string) *Flag {
-	f.Aliases = aliases
-	return f
 }
 
 func (fset *FlagSet) Lookup(name string) *Flag {
@@ -151,7 +156,7 @@ func (fset *FlagSet) Lookup(name string) *Flag {
 		return found
 	}
 	for _, f := range fset.dict {
-		for _, a := range f.Aliases {
+		for _, a := range f.aliases {
 			if a == name {
 				return f
 			}
