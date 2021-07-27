@@ -33,11 +33,11 @@ Basically `flag.FlagSet` works fine. The missing piece to enable what described 
 
 ```
 say -count 3 hello -upper
-___
+---
 cmd
     --------       ------
-      flag          flag
-            _______
+    int flag      bool flag
+             -----
              rest
 ```
 
