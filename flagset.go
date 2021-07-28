@@ -1,6 +1,7 @@
 package largo
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -37,6 +38,8 @@ const (
 	PanicOnError                         // Call panic with a descriptive error.
 )
 
+var ErrHelp = errors.New("flag: help requested")
+
 //go:embed usage.go.tpl
 var defaultUsageTemplate []byte
 
@@ -62,6 +65,9 @@ func (fset *FlagSet) Parse(arguments []string) error {
 	for i := 0; i < len(arguments); {
 		next, err := fset.parseSingle(i)
 		if err != nil {
+			if err == ErrHelp {
+				return nil
+			}
 			return fset.onError(err)
 		}
 		i = next
@@ -89,6 +95,11 @@ func (fset *FlagSet) parseSingle(i int) (next int, err error) {
 	name := s[numMinuses:]
 	if name[0] == '-' {
 		return i + 1, fmt.Errorf("invalid arg name: %s", name)
+	}
+
+	if name == "help" || name == "h" {
+		fset.usage()
+		return len(fset.args), ErrHelp
 	}
 
 	givenByEqual := false
@@ -173,9 +184,9 @@ func (fset *FlagSet) Lookup(name string) *Flag {
 }
 
 func (fset *FlagSet) onError(err error) error {
-	if err == nil {
-		return nil
-	}
+	// if err == nil {
+	// 	return nil
+	// }
 	switch fset.errhandle {
 	case ContinueOnError:
 		return err

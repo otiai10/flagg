@@ -79,6 +79,22 @@ func TestFlagSet_Parse(t *testing.T) {
 		Expect(t, upper).ToBe(false)
 		Expect(t, name).Not().ToBe("Hiromu")
 	})
+
+	When(t, "help is given, print help message", func(t *testing.T) {
+		fset.Output = bytes.NewBuffer(nil)
+		err := fset.Parse([]string{"hoge", "-upper=false", "-h", "-name", "Hiromu"})
+		Expect(t, err).ToBe(nil)
+		Expect(t, (fset.Output).(*bytes.Buffer).Len()).Not().ToBe(0)
+	})
+	When(t, "help with custom Usage func is set", func(t *testing.T) {
+		var msg string
+		fset.Usage = func() {
+			msg = "Hello"
+		}
+		err := fset.Parse([]string{"hoge", "-upper=false", "-h", "-name", "Hiromu"})
+		Expect(t, err).ToBe(nil)
+		Expect(t, msg).ToBe("Hello")
+	})
 }
 
 func TestFlagSet_DefaultUsage(t *testing.T) {
