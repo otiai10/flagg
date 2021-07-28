@@ -9,8 +9,6 @@ import (
 	"strings"
 	"text/template"
 
-	_ "embed"
-
 	"github.com/otiai10/largo/values"
 )
 
@@ -39,9 +37,6 @@ const (
 )
 
 var ErrHelp = errors.New("flag: help requested")
-
-//go:embed usage.go.tpl
-var defaultUsageTemplate []byte
 
 func NewFlagSet(name string, errorHandling ErrorHandling) *FlagSet {
 	return &FlagSet{
