@@ -1,6 +1,7 @@
 package largo
 
 import (
+	"bytes"
 	"testing"
 
 	. "github.com/otiai10/mint"
@@ -77,5 +78,51 @@ func TestFlagSet_Parse(t *testing.T) {
 		Expect(t, err).ToBe(nil)
 		Expect(t, upper).ToBe(false)
 		Expect(t, name).Not().ToBe("Hiromu")
+	})
+}
+
+func TestFlagSet_DefaultUsage(t *testing.T) {
+	var name string
+	var upper bool
+	var count int
+	fset := NewFlagSet("greet", ContinueOnError)
+	fset.Description = "Greet is an amazing command to configure everything in the world."
+
+	fset.StringVar(&name, "name", "otiai10", "Name of the user")
+	fset.BoolVar(&upper, "upper", false, "To upper case of the given name").Alias("U")
+	fset.IntVar(&count, "count", 7, "Count to say names").Alias("c")
+
+	buf := bytes.NewBuffer(nil)
+	err := fset.PrintDefaultUsage(buf)
+	Expect(t, err).ToBe(nil)
+	Expect(t, buf.String()).ToBe(`NAME
+  greet
+
+DESCRIPTION
+  Greet is an amazing command to configure everything in the world.
+
+OPTIONS
+  -count int, -c={int}
+        Count to say names
+  -name string
+        Name of the user
+  -upper, -U
+        To upper case of the given name
+`)
+
+	When(t, "without description", func(t *testing.T) {
+		fset := NewFlagSet("greet", ContinueOnError)
+		fset.BoolVar(&upper, "upper", false, "To upper case of the given name").Alias("U")
+		buf := bytes.NewBuffer(nil)
+		err := fset.PrintDefaultUsage(buf)
+		Expect(t, err).ToBe(nil)
+		Expect(t, buf.String()).ToBe(`NAME
+  greet
+
+OPTIONS
+  -upper, -U
+        To upper case of the given name
+`)
+
 	})
 }

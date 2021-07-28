@@ -16,3 +16,7 @@ func (i *IntValue) Set(s string) error {
 func (i *IntValue) Get() interface{} {
 	return int(*i)
 }
+
+func (i *IntValue) Type() string {
+	return "int"
+}

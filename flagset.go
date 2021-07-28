@@ -2,8 +2,13 @@ package largo
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"sort"
 	"strings"
+	"text/template"
+
+	_ "embed"
 
 	"github.com/otiai10/largo/values"
 )
@@ -15,13 +20,12 @@ type (
 		args      []string
 		rest      []string
 		dict      map[string]*Flag
-		// strict    bool // Error on Unkonw flag
-	}
-	Flag struct {
-		Name    string
-		Value   Value
-		usage   string
-		aliases []string
+
+		// Usage ...
+		// FIXME: Write something here
+		Usage       func()
+		Output      io.Writer
+		Description string
 	}
 	ErrorHandling int
 )
@@ -32,6 +36,9 @@ const (
 	ExitOnError                          // Call os.Exit(2) or for -h/-help Exit(0).
 	PanicOnError                         // Call panic with a descriptive error.
 )
+
+//go:embed usage.go.tpl
+var defaultUsageTemplate []byte
 
 func NewFlagSet(name string, errorHandling ErrorHandling) *FlagSet {
 	return &FlagSet{
@@ -142,7 +149,7 @@ func (fset *FlagSet) IntVar(dest *int, name string, defaultval int, usage string
 }
 
 func (fset *FlagSet) Var(value Value, name string, usage string) *Flag {
-	flag := &Flag{Name: name, Value: value, usage: usage}
+	flag := &Flag{Name: name, Value: value, Usage: usage}
 	if fset.dict == nil {
 		fset.dict = make(map[string]*Flag)
 	}
@@ -179,4 +186,34 @@ func (fset *FlagSet) onError(err error) error {
 		panic(err)
 	}
 	return err
+}
+
+func (fset *FlagSet) usage() {
+	if fset.Usage != nil {
+		fset.Usage()
+	}
+	fset.printDefaultUsage()
+}
+
+func (fset *FlagSet) printDefaultUsage() {
+	if fset.Output == nil {
+		fset.Output = os.Stderr
+	}
+	fset.PrintDefaultUsage(fset.Output)
+}
+
+func (fset *FlagSet) PrintDefaultUsage(w io.Writer) error {
+	tpl := template.Must(template.New("usage").Parse(string(defaultUsageTemplate)))
+	return tpl.Execute(w, fset)
+}
+
+func (fset *FlagSet) List() []*Flag {
+	result := []*Flag{}
+	for _, f := range fset.dict {
+		result = append(result, f)
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
+	return result
 }

@@ -10,3 +10,7 @@ func (s *StringValue) Set(val string) error {
 func (s *StringValue) Get() interface{} {
 	return string(*s)
 }
+
+func (s *StringValue) Type() string {
+	return "string"
+}

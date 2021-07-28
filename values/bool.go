@@ -16,3 +16,7 @@ func (b *BoolValue) Set(s string) error {
 func (b *BoolValue) Get() interface{} {
 	return bool(*b)
 }
+
+func (b *BoolValue) Type() string {
+	return "bool"
+}
