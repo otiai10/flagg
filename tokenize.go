@@ -6,6 +6,8 @@ const (
 	doublequote = '"'
 )
 
+var nobreakspace = [2]byte{194, 160}
+
 // Parse ...
 func Tokenize(s string) (tokens []string) {
 	return TokenizeBytes([]byte(s))
@@ -13,7 +15,12 @@ func Tokenize(s string) (tokens []string) {
 
 func TokenizeBytes(b []byte) (tokens []string) {
 	t := new(parser)
-	for _, c := range b {
+	for i, c := range b {
+		// See https://github.com/otiai10/largo/issues/1
+		if c == nobreakspace[0] && i < len(b)-1 && b[i+1] == nobreakspace[1] {
+			b[i+1] = space
+			continue
+		}
 		t.push(c)
 		if t.Closed {
 			tokens = append(tokens, t.flush())

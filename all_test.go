@@ -27,6 +27,14 @@ func TestTokenize(t *testing.T) {
 	} {
 		Expect(t, Tokenize(c.Input)).ToBe(c.Epxected)
 	}
+
+	When(t, "NO-BREAK SPACE is included, it should be splitted", func(t *testing.T) {
+		// https://www.utf8-chartable.de/
+		b1 := []byte{97, 97, 32, 98, 98}       // [32] = SPACE
+		b2 := []byte{97, 97, 194, 160, 98, 98} // [194, 160] == NO-BREAK SPACE
+		Expect(t, Tokenize(string(b1))).ToBe([]string{"aa", "bb"})
+		Expect(t, Tokenize(string(b2))).ToBe([]string{"aa", "bb"})
+	})
 }
 
 func TestFlagSet_ParseLine(t *testing.T) {
