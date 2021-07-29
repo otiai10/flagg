@@ -102,6 +102,7 @@ func TestFlagSet_Parse(t *testing.T) {
 		err := fset.Parse([]string{"hoge", "-upper=false", "-h", "-name", "Hiromu"})
 		Expect(t, err).ToBe(nil)
 		Expect(t, msg).ToBe("Hello")
+		Expect(t, fset.HelpRequested()).ToBe(true)
 	})
 }
 

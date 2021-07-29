@@ -22,9 +22,10 @@ type (
 
 		// Usage ...
 		// FIXME: Write something here
-		Usage       func()
-		Output      io.Writer
-		Description string
+		Usage         func()
+		Output        io.Writer
+		Description   string
+		helpRequested bool
 	}
 	ErrorHandling int
 )
@@ -93,6 +94,7 @@ func (fset *FlagSet) parseSingle(i int) (next int, err error) {
 	}
 
 	if name == "help" || name == "h" {
+		fset.helpRequested = true
 		fset.usage()
 		return len(fset.args), ErrHelp
 	}
@@ -222,4 +224,8 @@ func (fset *FlagSet) List() []*Flag {
 		return result[i].Name < result[j].Name
 	})
 	return result
+}
+
+func (fset *FlagSet) HelpRequested() bool {
+	return fset.helpRequested
 }
