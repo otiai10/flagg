@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"sort"
 	"strings"
 	"text/template"
@@ -204,7 +205,7 @@ func (fset *FlagSet) usage() {
 }
 
 func (fset *FlagSet) printDefaultUsage() {
-	if fset.Output == nil {
+	if reflect.ValueOf(fset.Output).IsNil() {
 		fset.Output = os.Stderr
 	}
 	fset.PrintDefaultUsage(fset.Output)

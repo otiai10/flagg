@@ -162,4 +162,16 @@ OPTIONS
 		fset.Output = help
 		fset.BoolVar(animated, "animated", false, "GIF画像でタイムラプス表示").Alias("a")
 	})
+
+	When(t, "Output is given but nil (e.g. *bytes.Buffer), it will NOT crush", func(t *testing.T) {
+		create := func(animated bool, help *bytes.Buffer) *FlagSet {
+			fset := NewFlagSet("", ContinueOnError)
+			fset.Output = help
+			fset.BoolVar(&animated, "animated", false, "GIF画像でタイムラプス表示").Alias("a")
+			return fset
+		}
+		fset := create(false, nil)
+		fset.Parse([]string{"-h"})
+		Expect(t, fset.HelpRequested()).ToBe(true)
+	})
 }
