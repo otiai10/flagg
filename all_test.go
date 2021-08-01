@@ -150,4 +150,16 @@ OPTIONS
 `)
 
 	})
+
+	Because(t, "var must NOT be nil pointer", func(t *testing.T) {
+		defer func() {
+			r := recover()
+			Expect(t, r).Not().ToBe(nil)
+		}()
+		help := bytes.NewBuffer(nil)
+		var animated *bool
+		fset := NewFlagSet("", ContinueOnError)
+		fset.Output = help
+		fset.BoolVar(animated, "animated", false, "GIF画像でタイムラプス表示").Alias("a")
+	})
 }
