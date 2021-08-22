@@ -122,6 +122,7 @@ func (fset *FlagSet) parseSingle(i int) (next int, err error) {
 		if !givenByEqual {
 			rawval = "true"
 		}
+		f.given = true
 		return i + 1, bv.Set(rawval)
 	}
 
@@ -130,6 +131,7 @@ func (fset *FlagSet) parseSingle(i int) (next int, err error) {
 		i++
 	}
 
+	f.given = true
 	err = f.Value.Set(rawval)
 
 	return i + 1, err

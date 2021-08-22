@@ -45,6 +45,11 @@ func TestFlagSet_ParseLine(t *testing.T) {
 	Expect(t, verbose).ToBe(true)
 	Expect(t, fset.Rest()).ToBe([]string{"create", "aws", "ec2-instance"})
 
+	Expect(t, fset.Lookup("verbose")).Not().ToBe(nil)
+	Expect(t, fset.Lookup("verbose").Given()).ToBe(true)
+	Expect(t, fset.Lookup("undefined")).ToBe(nil)
+	Expect(t, fset.Lookup("undefined").Given()).ToBe(false)
+
 	When(t, "invalid input with PanicOnError", func(t *testing.T) {
 		defer func() {
 			re := recover()
