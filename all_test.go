@@ -108,6 +108,18 @@ func TestFlagSet_Parse(t *testing.T) {
 		Expect(t, err).ToBe(nil)
 		Expect(t, msg).ToBe("Hello")
 		Expect(t, fset.HelpRequested()).ToBe(true)
+
+		Expect(t, fset.HelpMessage()).ToBe(`NAME
+  foo
+
+OPTIONS
+  -c int
+        Count to say names
+  -name string, -n={string}
+        Name of the user
+  -upper
+        To upper case of the given name
+`)
 	})
 }
 
@@ -161,10 +173,9 @@ OPTIONS
 			r := recover()
 			Expect(t, r).Not().ToBe(nil)
 		}()
-		help := bytes.NewBuffer(nil)
 		var animated *bool
 		fset := NewFlagSet("", ContinueOnError)
-		fset.Output = help
+		fset.Output = bytes.NewBuffer(nil)
 		fset.BoolVar(animated, "animated", false, "GIF画像でタイムラプス表示").Alias("a")
 	})
 

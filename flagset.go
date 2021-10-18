@@ -1,6 +1,7 @@
 package largo
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -207,10 +208,11 @@ func (fset *FlagSet) usage() {
 }
 
 func (fset *FlagSet) printDefaultUsage() {
-	if reflect.ValueOf(fset.Output).IsNil() {
-		fset.Output = os.Stderr
+	if reflect.ValueOf(fset.Output).IsZero() {
+		fset.PrintDefaultUsage(os.Stdout)
+	} else {
+		fset.PrintDefaultUsage(fset.Output)
 	}
-	fset.PrintDefaultUsage(fset.Output)
 }
 
 func (fset *FlagSet) PrintDefaultUsage(w io.Writer) error {
@@ -231,4 +233,10 @@ func (fset *FlagSet) List() []*Flag {
 
 func (fset *FlagSet) HelpRequested() bool {
 	return fset.helpRequested
+}
+
+func (fset *FlagSet) HelpMessage() string {
+	buf := bytes.NewBuffer(nil)
+	fset.PrintDefaultUsage(buf)
+	return buf.String()
 }
